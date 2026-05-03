@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bac 30-Day Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --surface3: #272727;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0ede8;
+    --text2: #888882;
+    --text3: #555550;
+
+    --math: #4a9eff;
+    --math-bg: rgba(74,158,255,0.1);
+    --math-border: rgba(74,158,255,0.25);
+
+    --physics: #f5a623;
+    --physics-bg: rgba(245,166,35,0.1);
+    --physics-border: rgba(245,166,35,0.25);
+
+    --svt: #5cc87a;
+    --svt-bg: rgba(92,200,122,0.1);
+    --svt-border: rgba(92,200,122,0.25);
+
+    --philo: #b07fff;
+    --philo-bg: rgba(176,127,255,0.1);
+    --philo-border: rgba(176,127,255,0.25);
+
+    --english: #ff7eb3;
+    --english-bg: rgba(255,126,179,0.1);
+    --english-border: rgba(255,126,179,0.25);
+
+    --danger: #ff4444;
+    --danger-bg: rgba(255,68,68,0.1);
+
+    --rest: #64c8c8;
+    --rest-bg: rgba(100,200,200,0.1);
+    --rest-border: rgba(100,200,200,0.25);
+
+    --eat: #ffb347;
+    --eat-bg: rgba(255,179,71,0.1);
+    --eat-border: rgba(255,179,71,0.25);
+
+    --out: #a8e063;
+    --out-bg: rgba(168,224,99,0.1);
+    --out-border: rgba(168,224,99,0.25);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  .app {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .header-left h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .header-left p {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  .subject-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .stat-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .stat-pill span { font-weight: 500; color: var(--text); }
+
+  /* DAY NAV */
+  .day-nav {
+    display: flex;
+    gap: 4px;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .day-nav::-webkit-scrollbar { display: none; }
+
+  .day-btn {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text3);
+    transition: all 0.15s;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .day-btn:hover { border-color: var(--border2); color: var(--text2); }
+  .day-btn.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+    font-weight: 700;
+  }
+  .day-btn.has-blocks { border-color: var(--border2); color: var(--text2); }
+  .day-btn.has-blocks::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; left: 50%;
+    transform: translateX(-50%);
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--text2);
+  }
+  .day-btn.active::after { display: none; }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    overflow: hidden;
+  }
+
+  /* PALETTE */
+  .palette {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface3) transparent;
+  }
+
+  .palette-section { margin-bottom: 4px; }
+
+  .palette-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 4px 6px;
+  }
+
+  .block-btn {
+    width: 100%;
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 3px;
+    transition: all 0.12s;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .block-btn:hover { transform: translateX(2px); }
+  .block-btn:active { transform: translateX(1px) scale(0.99); }
+
+  .block-btn .bn { font-size: 12px; font-weight: 600; display: block; }
+  .block-btn .bs { font-size: 10px; font-family: 'DM Mono', monospace; opacity: 0.65; display: block; margin-top: 1px; }
+
+  .b-math { background: var(--math-bg); border-color: var(--math-border); }
+  .b-math .bn { color: var(--math); }
+  .b-physics { background: var(--physics-bg); border-color: var(--physics-border); }
+  .b-physics .bn { color: var(--physics); }
+  .b-svt { background: var(--svt-bg); border-color: var(--svt-border); }
+  .b-svt .bn { color: var(--svt); }
+  .b-philo { background: var(--philo-bg); border-color: var(--philo-border); }
+  .b-philo .bn { color: var(--philo); }
+  .b-english { background: var(--english-bg); border-color: var(--english-border); }
+  .b-english .bn { color: var(--english); }
+  .b-rest { background: var(--rest-bg); border-color: var(--rest-border); }
+  .b-rest .bn { color: var(--rest); }
+  .b-eat { background: var(--eat-bg); border-color: var(--eat-border); }
+  .b-eat .bn { color: var(--eat); }
+  .b-out { background: var(--out-bg); border-color: var(--out-border); }
+  .b-out .bn { color: var(--out); }
+
+  /* CANVAS */
+  .canvas {
+    overflow-y: auto;
+    padding: 20px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface3) transparent;
+  }
+
+  .canvas-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .day-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .hours-info {
+    text-align: right;
+  }
+
+  .hours-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .hours-count.over { color: var(--danger); }
+
+  .hours-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--surface3);
+    border-radius: 99px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--text);
+    transition: width 0.3s ease;
+  }
+
+  .progress-fill.full { background: var(--danger); }
+
+  /* SLOTS */
+  .slots { display: flex; flex-direction: column; gap: 6px; }
+
+  .slot {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    animation: slideIn 0.15s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slot-math { background: var(--math-bg); border-color: var(--math-border); }
+  .slot-physics { background: var(--physics-bg); border-color: var(--physics-border); }
+  .slot-svt { background: var(--svt-bg); border-color: var(--svt-border); }
+  .slot-philo { background: var(--philo-bg); border-color: var(--philo-border); }
+  .slot-english { background: var(--english-bg); border-color: var(--english-border); }
+  .slot-rest { background: var(--rest-bg); border-color: var(--rest-border); }
+  .slot-eat { background: var(--eat-bg); border-color: var(--eat-border); }
+  .slot-out { background: var(--out-bg); border-color: var(--out-border); }
+
+  .slot-rest .slot-label { color: var(--rest); }
+  .slot-eat .slot-label { color: var(--eat); }
+  .slot-out .slot-label { color: var(--out); }
+
+  .slot-label { font-size: 12px; font-weight: 600; }
+  .slot-sub { font-family: 'DM Mono', monospace; font-size: 10px; opacity: 0.6; margin-top: 2px; }
+
+  .slot-math .slot-label { color: var(--math); }
+  .slot-physics .slot-label { color: var(--physics); }
+  .slot-svt .slot-label { color: var(--svt); }
+  .slot-philo .slot-label { color: var(--philo); }
+  .slot-english .slot-label { color: var(--english); }
+
+  .hour-select {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 4px 6px;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .hour-select:focus { border-color: var(--border2); }
+
+  .del-btn {
+    width: 24px; height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+    line-height: 1;
+  }
+
+  .del-btn:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    border: 1px dashed var(--border2);
+    border-radius: 10px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  /* BOTTOM */
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .total-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .total-badge span { color: var(--text); font-weight: 500; }
+
+  .btn-group { display: flex; gap: 8px; }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+
+  .btn-ghost:hover { border-color: var(--danger); color: var(--danger); }
+
+  .btn-primary {
+    background: var(--text);
+    border: 1px solid var(--text);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* EXPORT MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-size: 20px;
+    cursor: pointer;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    transition: all 0.1s;
+  }
+
+  .modal-close:hover { background: var(--surface3); color: var(--text); }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .export-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text2);
+    white-space: pre-wrap;
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 99px;
+    opacity: 0;
+    transition: all 0.2s;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Bac 30-Day Planner</h1>
+      <p id="global-stat">0 / 510 hours planned</p>
+    </div>
+    <div class="subject-stats">
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--math)"></div>Math <span id="s-math">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--physics)"></div>Physics <span id="s-physics">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--svt)"></div>SVT <span id="s-svt">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--philo)"></div>Philo <span id="s-philo">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--english)"></div>English <span id="s-english">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--rest)"></div>Rest <span id="s-rest">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--eat)"></div>Eat <span id="s-eat">0h</span></div>
+      <div class="stat-pill"><div class="stat-dot" style="background:var(--out)"></div>Out <span id="s-out">0h</span></div>
+    </div>
+  </div>
+
+  <div class="day-nav" id="day-nav"></div>
+
+  <div class="main">
+    <div class="palette">
+
+      <div class="palette-section">
+        <div class="palette-label">Math</div>
+        <button class="block-btn b-math" onclick="addBlock('Math','Lesson',2)"><span class="bn">Math — Lesson</span><span class="bs">cours théorique</span></button>
+        <button class="block-btn b-math" onclick="addBlock('Math','Exercise',2)"><span class="bn">Math — Exercise</span><span class="bs">séries d'exercices</span></button>
+        <button class="block-btn b-math" onclick="addBlock('Math','Big Class - Math',3)"><span class="bn">Big Class (Math)</span><span class="bs">devoir surveillé</span></button>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Physics</div>
+        <button class="block-btn b-physics" onclick="addBlock('Physics','Lesson',2)"><span class="bn">Physics — Lesson</span><span class="bs">cours théorique</span></button>
+        <button class="block-btn b-physics" onclick="addBlock('Physics','Exercise',2)"><span class="bn">Physics — Exercise</span><span class="bs">séries d'exercices</span></button>
+        <button class="block-btn b-physics" onclick="addBlock('Physics','Big Class - PC',3)"><span class="bn">Big Class (PC)</span><span class="bs">devoir surveillé</span></button>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">SVT</div>
+        <button class="block-btn b-svt" onclick="addBlock('SVT','Lesson',2)"><span class="bn">SVT — Lesson</span><span class="bs">cours théorique</span></button>
+        <button class="block-btn b-svt" onclick="addBlock('SVT','Exercise',2)"><span class="bn">SVT — Exercise</span><span class="bs">séries d'exercices</span></button>
+        <button class="block-btn b-svt" onclick="addBlock('SVT','Big Class - SVT',3)"><span class="bn">Big Class (SVT)</span><span class="bs">devoir surveillé</span></button>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Philosophy</div>
+        <button class="block-btn b-philo" onclick="addBlock('Philosophy','Lesson',2)"><span class="bn">Philo — Lesson</span><span class="bs">cours théorique</span></button>
+        <button class="block-btn b-philo" onclick="addBlock('Philosophy','Exercise',2)"><span class="bn">Philo — Exercise</span><span class="bs">dissertation / analyse</span></button>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">English</div>
+        <button class="block-btn b-english" onclick="addBlock('English','Lesson',2)"><span class="bn">English — Lesson</span><span class="bs">grammar / vocab</span></button>
+        <button class="block-btn b-english" onclick="addBlock('English','Exercise',2)"><span class="bn">English — Exercise</span><span class="bs">comprehension / writing</span></button>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-label">Lifestyle</div>
+        <button class="block-btn b-rest" onclick="addBlock('Rest','Rest',1)"><span class="bn">Rest</span><span class="bs">nap / recovery / sleep</span></button>
+        <button class="block-btn b-eat" onclick="addBlock('Eat','Eat',0.5)"><span class="bn">Eating</span><span class="bs">meals / breaks</span></button>
+        <button class="block-btn b-out" onclick="addBlock('Out','Out',1)"><span class="bn">Going Out</span><span class="bs">walk / fresh air / social</span></button>
+      </div>
+
+    </div>
+
+    <div class="canvas">
+      <div class="canvas-header">
+        <div class="day-title" id="day-label">Day 1</div>
+        <div class="hours-info">
+          <div class="hours-count" id="hours-count">0 / 17h</div>
+          <div class="hours-sub">hours used today</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="slots" id="slots"></div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="total-badge">Total planned: <span id="total-hours">0h</span> across <span id="total-days">0</span> days</div>
+    <div class="btn-group">
+      <button class="btn btn-ghost" onclick="clearDay()">Clear day</button>
+      <button class="btn btn-primary" onclick="openExport()">Export summary</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Plan Summary</h2>
+      <button class="modal-close" onclick="closeExport()">×</button>
+    </div>
+    <div class="modal-body">
+      <pre class="export-text" id="export-text"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeExport()">Close</button>
+      <button class="btn btn-primary" onclick="copyExport()">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAYS = 30;
+const MAX_H = 17;
+let current = 1;
+const plan = {};
+for (let i = 1; i <= DAYS; i++) plan[i] = [];
+
+const colorMap = {
+  'Math': 'math', 'Physics': 'physics', 'SVT': 'svt',
+  'Philosophy': 'philo', 'English': 'english',
+  'Rest': 'rest', 'Eat': 'eat', 'Out': 'out'
+};
+
+const typeLabel = {
+  'Lesson': 'cours théorique',
+  'Exercise': 'exercices',
+  'Big Class - Math': 'devoir surveillé',
+  'Big Class - PC': 'devoir surveillé',
+  'Big Class - SVT': 'devoir surveillé',
+  'Rest': 'nap / recovery / sleep',
+  'Eat': 'meals / breaks',
+  'Out': 'walk / fresh air / social'
+};
+
+function buildNav() {
+  const nav = document.getElementById('day-nav');
+  for (let i = 1; i <= DAYS; i++) {
+    const b = document.createElement('button');
+    b.className = 'day-btn';
+    b.id = 'nb' + i;
+    b.textContent = i;
+    b.onclick = () => switchDay(i);
+    nav.appendChild(b);
+  }
+  refreshNav();
+}
+
+function refreshNav() {
+  for (let i = 1; i <= DAYS; i++) {
+    const b = document.getElementById('nb' + i);
+    const has = plan[i].length > 0;
+    b.className = 'day-btn' + (i === current ? ' active' : has ? ' has-blocks' : '');
+  }
+}
+
+function switchDay(d) {
+  current = d;
+  document.getElementById('day-label').textContent = 'Day ' + d;
+  renderSlots();
+  refreshNav();
+}
+
+function used(d) { return plan[d].reduce((s, b) => s + b.hours, 0); }
+
+function renderSlots() {
+  const u = used(current);
+  const hc = document.getElementById('hours-count');
+  hc.textContent = u + ' / 17h';
+  hc.className = 'hours-count' + (u >= MAX_H ? ' over' : '');
+  const pct = Math.min(100, Math.round((u / MAX_H) * 100));
+  const pf = document.getElementById('progress-fill');
+  pf.style.width = pct + '%';
+  pf.className = 'progress-fill' + (u >= MAX_H ? ' full' : '');
+
+  const slots = document.getElementById('slots');
+  if (!plan[current].length) {
+    slots.innerHTML = '<div class="empty-state">← click a block to add it to day ' + current + '<br>each block is adjustable in hours</div>';
+    return;
+  }
+
+  slots.innerHTML = '';
+  plan[current].forEach((block, idx) => {
+    const c = colorMap[block.subject];
+    const el = document.createElement('div');
+    el.className = 'slot slot-' + c;
+
+    const opts = [0.5,1,2,3,4,5,6,7,8].map(h =>
+      `<option value="${h}"${h === block.hours ? ' selected' : ''}>${h === 0.5 ? '30min' : h+'h'}</option>`
+    ).join('');
+
+    el.innerHTML = `
+      <div>
+        <div class="slot-label">${block.subject} — ${block.type}</div>
+        <div class="slot-sub">${typeLabel[block.type] || ''}</div>
+      </div>
+      <select class="hour-select" onchange="changeHours(${idx},this.value)">${opts}</select>
+      <button class="del-btn" onclick="removeBlock(${idx})">×</button>
+    `;
+    slots.appendChild(el);
+  });
+}
+
+function addBlock(subject, type, defaultH) {
+  const remaining = MAX_H - used(current);
+  if (remaining <= 0) { showToast('Day ' + current + ' is full — 17h reached'); return; }
+  const h = Math.min(defaultH, remaining);
+  plan[current].push({ subject, type, hours: h });
+  renderSlots();
+  updateStats();
+  refreshNav();
+}
+
+function removeBlock(idx) {
+  plan[current].splice(idx, 1);
+  renderSlots();
+  updateStats();
+  refreshNav();
+}
+
+function changeHours(idx, val) {
+  const h = parseInt(val);
+  const other = plan[current].reduce((s, b, i) => i !== idx ? s + b.hours : s, 0);
+  if (other + h > MAX_H) { showToast('Exceeds 17h limit'); renderSlots(); return; }
+  plan[current][idx].hours = h;
+  renderSlots();
+  updateStats();
+}
+
+function clearDay() {
+  plan[current] = [];
+  renderSlots();
+  updateStats();
+  refreshNav();
+}
+
+function updateStats() {
+  const t = { Math: 0, Physics: 0, SVT: 0, Philosophy: 0, English: 0, Rest: 0, Eat: 0, Out: 0 };
+  let grand = 0; let days = 0;
+  for (let i = 1; i <= DAYS; i++) {
+    if (plan[i].length) days++;
+    plan[i].forEach(b => { t[b.subject] += b.hours; grand += b.hours; });
+  }
+  document.getElementById('global-stat').textContent = grand + ' / 510 hours planned';
+  document.getElementById('s-math').textContent = t.Math + 'h';
+  document.getElementById('s-physics').textContent = t.Physics + 'h';
+  document.getElementById('s-svt').textContent = t.SVT + 'h';
+  document.getElementById('s-philo').textContent = t.Philosophy + 'h';
+  document.getElementById('s-english').textContent = t.English + 'h';
+  document.getElementById('s-rest').textContent = t.Rest + 'h';
+  document.getElementById('s-eat').textContent = t.Eat + 'h';
+  document.getElementById('s-out').textContent = t.Out + 'h';
+  document.getElementById('total-hours').textContent = grand + 'h';
+  document.getElementById('total-days').textContent = days;
+}
+
+function buildExportText() {
+  const t = { Math: 0, Physics: 0, SVT: 0, Philosophy: 0, English: 0, Rest: 0, Eat: 0, Out: 0 };
+  let grand = 0;
+  let lines = ['BAC 30-DAY REVISION PLAN\n' + '─'.repeat(32) + '\n'];
+  for (let i = 1; i <= DAYS; i++) {
+    if (plan[i].length) {
+      lines.push('Day ' + i + '  [' + used(i) + 'h]');
+      plan[i].forEach(b => {
+        lines.push('  · ' + b.subject + ' — ' + b.type + ' (' + b.hours + 'h)');
+        t[b.subject] += b.hours;
+        grand += b.hours;
+      });
+      lines.push('');
+    }
+  }
+  lines.push('─'.repeat(32));
+  lines.push('TOTALS');
+  Object.entries(t).forEach(([s, h]) => { if (h > 0) lines.push('  ' + s + ': ' + h + 'h'); });
+  lines.push('  Total: ' + grand + 'h / 510h');
+  return lines.join('\n');
+}
+
+function openExport() {
+  document.getElementById('export-text').textContent = buildExportText();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeExport() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(buildExportText()).then(() => {
+    showToast('Copied to clipboard');
+    closeExport();
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeExport();
+});
+
+buildNav();
+switchDay(1);
+</script>
+</body>
+</html>
